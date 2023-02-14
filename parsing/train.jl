@@ -13,11 +13,6 @@ function load_timeseries(path::String)::DataFrame
   return ts
 end
 
-begin
-  describe(train) |> println
-  schema(train)
-end
-
 """Returns y, X"""
 function process_for_tree(timeseries::DataFrame, should_unpack::Bool)::Tuple{Vector{Float64},DataFrame}
   X = DataFrame()
@@ -45,25 +40,3 @@ function process_for_tree(timeseries::DataFrame, should_unpack::Bool)::Tuple{Vec
 
   return (y, X)
 end
-
-#### Evaluation
-include("../models.jl")
-
-train_timeseries = load_timeseries("./data/train.csv")
-y, X = process_for_tree(train_timeseries, true)
-tree = EvoTreeRegressor(
-  loss=:logistic
-)
-mach = machine(tree, X, y)
-evaluate!(mach, measure=[rms, rmsle])
-
-#### Prediction
-
-X_timeseries = load_timeseries("./data/test.csv")
-_, X_test = process_for_tree(X_timeseries, false)
-
-y_test = predict(mach, X_test)
-
-out = X_timeseries[!, [:id]]
-out[!, :sales] = y_test
-CSV.write("out.csv", out)
